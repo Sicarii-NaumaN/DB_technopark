@@ -26,8 +26,8 @@ func CreateRouter(conn *pgxpool.Pool, logger *zap.Logger) *mux.Router {
 	postsApp := application.NewPostApp(repoPosts)
 	userApp := application.NewUserApp(repoUser)
 	serviceApp := application.NewServiceApp(repoService)
-	threadsApp := application.NewThreadApp(repoThreads)
 	forumApp := application.NewForumApp(repoForum)
+	threadsApp := application.NewThreadApp(repoThreads, forumApp)
 
 	forumInfo := forum.NewForumInfo(forumApp, userApp, threadsApp, logger)
 	userInfo := user.NewUserInfo(userApp, logger)

@@ -8,10 +8,11 @@ import (
 
 type ThreadApp struct {
 	t repository.ThreadRepository
+	forumApp ForumAppInterface
 }
 
-func NewThreadApp(f repository.ThreadRepository) *ThreadApp {
-	return &ThreadApp{t: f}
+func NewThreadApp(f repository.ThreadRepository, forumApp ForumAppInterface) *ThreadApp {
+	return &ThreadApp{t: f, forumApp: forumApp}
 }
 
 type ThreadAppInterface interface {
@@ -31,6 +32,10 @@ func (t *ThreadApp) CreatePosts(thread *entity.Thread, posts []entity.Post) erro
 }
 
 func (t *ThreadApp) CreateThread(thread *entity.Thread) error {
+	err := t.forumApp.CheckForum(thread.Forum)
+	if err != nil {
+		return entity.ForumNotExistError
+	}
 	return t.t.CreateThread(thread)
 }
 
@@ -56,7 +61,8 @@ func (t *ThreadApp) GetThreadPosts(slug string, limit int32, since string, sort 
 func (t *ThreadApp) CheckThread(slugOrID string) error {
 	id, err := strconv.Atoi(slugOrID)
 	if err != nil {
-		return t.t.CheckThreadBySlug(slugOrID)
+		_, err = t.t.CheckThreadBySlug(slugOrID)
+		return err
 	}
 
 	return 	t.t.CheckThreadByID(id)

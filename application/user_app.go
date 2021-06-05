@@ -35,6 +35,23 @@ func (us *UserApp) GetUserByNickname(nickname string) (*entity.User, error) {
 }
 
 func (us *UserApp) UpdateUser(newUser *entity.User) (*entity.User, error) {
+	userFromDB, err := us.GetUserByNickname(newUser.Nickname)
+	if err != nil {
+		return nil, err
+	}
+
+	if newUser.Fullname == nil {
+		newUser.Fullname = userFromDB.Fullname
+	}
+
+	if newUser.Email == nil {
+		newUser.Email = userFromDB.Email
+	}
+
+	if newUser.About == nil {
+		newUser.About = userFromDB.About
+	}
+
 	return us.us.UpdateUser(newUser)
 }
 
