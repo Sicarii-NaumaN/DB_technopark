@@ -32,8 +32,8 @@ func CreateRouter(conn *pgxpool.Pool, logger *zap.Logger) *mux.Router {
 	forumInfo := forum.NewForumInfo(forumApp, userApp, threadsApp, logger)
 	userInfo := user.NewUserInfo(userApp, logger)
 	serviceInfo := service.NewServiceInfo(serviceApp, logger)
-	postsInfo := post.NewPostInfo(postsApp, logger)
-	threadsInfo := thread.NewThreadInfo(threadsApp, logger)
+	postsInfo := post.NewPostInfo(postsApp, userApp, threadsApp, forumApp, logger)
+	threadsInfo := thread.NewThreadInfo(threadsApp, userApp, logger)
 
 	r.HandleFunc("/api/forum/create", forumInfo.HandleCreateForum).Methods("POST")
 	r.HandleFunc("/api/forum/{slug}/create", forumInfo.HandleCreateForumThread).Methods("POST")

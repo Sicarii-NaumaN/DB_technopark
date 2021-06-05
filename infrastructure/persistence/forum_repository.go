@@ -25,7 +25,7 @@ func (f *ForumRepo) CreateThread(threadInput *entity.Thread) error {
 	return nil
 }
 
-func (f *ForumRepo) GetForumUsers(slug string, limit int32, since string, desc bool) ([]entity.User, error) {
+func (f *ForumRepo) GetForumUsers(slug string, limit int32, since string, order string) ([]entity.User, error) {
 	return nil, nil
 }
 

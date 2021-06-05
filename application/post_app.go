@@ -19,9 +19,9 @@ type PostAppInterface interface {
 }
 
 func (p *PostApp) GetPostDetails(postID int) (*entity.Post, error) {
-	return nil, nil
+	return p.p.GetPostDetails(postID)
 }
 
 func (p *PostApp) ChangePostMessage(post *entity.Post) (*entity.Post, error) {
-	return nil, nil
+	return p.p.ChangePostMessage(post)
 }

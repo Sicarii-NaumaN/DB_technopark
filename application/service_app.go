@@ -19,9 +19,9 @@ type ServiceAppInterface interface {
 }
 
 func (s *ServiceApp) ClearAllDate() error {
-	return nil
+	return s.s.ClearAllDate()
 }
 
 func (s *ServiceApp) GetDBStatus() (*entity.Status, error) {
-	return nil, nil
+	return s.s.GetDBStatus()
 }

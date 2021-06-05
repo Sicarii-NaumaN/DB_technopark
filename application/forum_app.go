@@ -16,33 +16,29 @@ func NewForumApp(f repository.ForumRepository) *ForumApp {
 type ForumAppInterface interface {
 	CreateForum(forumInput *entity.Forum) error
 	GetForumDetails(slug string) (*entity.Forum, error)
-	CreateThread(threadInput *entity.Thread) error
 	GetForumUsers(slug string, limit int32, since string, desc bool) ([]entity.User, error)
-	GetForumThreads(slug string, limit int32, since string, desc bool) (*entity.Thread, error)
 	CheckForum(slug string) error
 }
 
 func (f *ForumApp) CreateForum(forumInput *entity.Forum) error {
-	return nil
+	return f.f.CreateForum(forumInput)
 }
 
 func (f *ForumApp) GetForumDetails(slug string) (*entity.Forum, error) {
-	return nil, nil
-}
-
-func (f *ForumApp) CreateThread(threadInput *entity.Thread) error {
-	return nil
+	return f.f.GetForumDetails(slug)
 }
 
 func (f *ForumApp) GetForumUsers(slug string, limit int32, since string, desc bool) ([]entity.User, error) {
-	return nil, nil
-}
+	order := "ASC"
+	switch desc {
+	case true:
+		order = "DESC"
+	}
 
-func (f *ForumApp) GetForumThreads(slug string, limit int32, since string, desc bool) (*entity.Thread, error) {
-	return nil, nil
+	return f.f.GetForumUsers(slug, limit, since, order)
 }
 
 func (f *ForumApp) CheckForum(slug string) error {
-	return nil
+	return f.f.CheckForum(slug)
 }
 
