@@ -39,19 +39,19 @@ func (f *ForumRepo) GetForumDetails(slug string) (*entity.Forum, error) {
 }
 
 func (f *ForumRepo) GetForumUsers(slug string, limit int32, since string, order string, compare string) ([]entity.User, error) {
-	GetForumUsersQ :=
+	var query string
 	if since != "" {
 		fmt.Println("-----=========================>", since)
 		if limit != 0 {
 			fmt.Println("--------------1---------------")
-			GetForumUsersQ = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
+			query = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
 				JOIN forum_user AS fu ON u.nickname = fu.nickname
 				WHERE fu.forum_slug = '%s' AND fu.nickname %v '%s'
 				ORDER BY u.nickname %v
 				LIMIT %v`, slug, compare, since, order, limit)
 		} else {
 			fmt.Println("--------------2---------------")
-			GetForumUsersQ = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
+			query = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
 				JOIN forum_user AS fu ON u.nickname = fu.nickname
 				WHERE fu.forum_slug = '%s' AND fu.nickname %v '%s'
 				ORDER BY u.nickname %v`, slug, compare, since, order)
@@ -59,21 +59,21 @@ func (f *ForumRepo) GetForumUsers(slug string, limit int32, since string, order 
 	} else {
 		if limit != 0 {
 			fmt.Println("--------------3---------------")
-			GetForumUsersQ = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
+			query = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
 				JOIN forum_user AS fu ON u.nickname = fu.nickname
 				WHERE fu.forum_slug = '%s'
 				ORDER BY u.nickname %v
 				LIMIT %v`, slug, order, limit)
 		} else {
 			fmt.Println("--------------4---------------")
-			GetForumUsersQ = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
+			query = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
 				JOIN forum_user AS fu ON u.nickname = fu.nickname
 				WHERE fu.forum_slug = '%s' 
 				ORDER BY u.nickname %v`, slug, order)
 		}
 	}
 
-	rows, err := f.db.Query(context.Background(), GetForumUsersQ)
+	rows, err := f.db.Query(context.Background(), query)
 	if err != nil {
 		return nil, err
 	}
