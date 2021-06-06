@@ -53,7 +53,7 @@ func (userInfo *UserInfo) HandleCreateUser(w http.ResponseWriter, r *http.Reques
 
 	err = userInfo.userApp.CreateUser(user)
 	if err != nil {
-		users, err := userInfo.userApp.GetUsersWithNicknameAndEmail(nickname, *user.Email)
+		users, err := userInfo.userApp.GetUsersWithNicknameAndEmail(nickname, user.Email)
 		if err != nil {
 			userInfo.logger.Info(
 				err.Error(), zap.String("url", r.RequestURI),
@@ -173,7 +173,7 @@ func (userInfo *UserInfo) HandleUpdateUser(w http.ResponseWriter, r *http.Reques
 			w.Write(body)
 			return
 		} else if errors.Is(err, entity.DataError) {
-			emailOwnerNickname, err := userInfo.userApp.GetUserNicknameWithEmail(*profile.Email)
+			emailOwnerNickname, err := userInfo.userApp.GetUserNicknameWithEmail(profile.Email)
 			if err != nil {
 				userInfo.logger.Info(
 					err.Error(), zap.String("url", r.RequestURI),

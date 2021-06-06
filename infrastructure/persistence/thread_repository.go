@@ -20,8 +20,8 @@ func NewThreadRepository(db *pgxpool.Pool) *ThreadRepo {
 }
 
 const GetThreadFromPostsQuery = `SELECT thread FROM posts WHERE id = $1`
-var  CreatePostsQuery = `INSERT INTO posts(author, created, forum, msg, parent, thread) VALUES `
 func (t *ThreadRepo) CreatePosts(thread *entity.Thread, posts []entity.Post) error {
+	var  CreatePostsQuery = `INSERT INTO posts(author, created, forum, msg, parent, thread) VALUES `
 	if posts[0].Parent != 0 {
 		var parentThread int
 		err := t.db.QueryRow(context.Background(), GetThreadFromPostsQuery, posts[0].Parent).Scan(&parentThread)
@@ -48,28 +48,25 @@ func (t *ThreadRepo) CreatePosts(thread *entity.Thread, posts []entity.Post) err
 			i*6+1, i*6+2, i*6+3, i*6+4, i*6+5, i*6+6,
 		)
 
-		args = append(args, post)
+		args = append(args, post.Author, created, thread.Forum, post.Message, post.Parent, thread.ID)
 	}
 
 	CreatePostsQuery = CreatePostsQuery[:len(CreatePostsQuery)-1]
 	CreatePostsQuery += ` RETURNING id`
-
 	rows, err := t.db.Query(context.Background(), CreatePostsQuery, args...)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
-
 	var idx int
 	for rows.Next() {
 		err = rows.Scan(&posts[idx].ID)
 		if err != nil {
-			return fmt.Errorf("couldn't scan post id: %w", err)
+			return err
 		}
 
 		idx++
 	}
-
 	return nil
 }
 
@@ -88,15 +85,15 @@ func (t *ThreadRepo) CreateThread(thread *entity.Thread) error {
 }
 
 func (t *ThreadRepo) GetThreadPosts(slug string, limit int32, since string, order string) ([]entity.Post, error) {
-	var sinceCond string
+	var sinceQuery string
 	if since != "" {
 		if order == "DESC" {
-			sinceCond = fmt.Sprintf("AND id < %v", since)
+			sinceQuery = fmt.Sprintf("AND id < %v", since)
 		} else {
-			sinceCond = fmt.Sprintf("AND id > %v", since)
+			sinceQuery = fmt.Sprintf("AND id > %v", since)
 		}
 	}
-
+	fmt.Println("------------------1----------------")
 	threadID, err := strconv.Atoi(slug)
 	if err != nil {
 		threadID, err = t.CheckThreadBySlug(slug)
@@ -104,15 +101,15 @@ func (t *ThreadRepo) GetThreadPosts(slug string, limit int32, since string, orde
 			return nil, err
 		}
 	}
-
+	fmt.Println("------------------2----------------")
 	query := fmt.Sprintf(`SELECT author, created, forum, id, msg, parent, thread FROM posts
 	WHERE thread = $1 %v
-	ORDER BY id %v`, sinceCond, order)
+	ORDER BY id %v`, sinceQuery, order)
 
 	if limit != 0 {
 		query += fmt.Sprintf(" LIMIT %v", limit)
 	}
-
+	fmt.Println("------------------3", query, "----------------")
 	rows, err := t.db.Query(context.Background(), query, threadID)
 	if err != nil {
 		return nil, err
@@ -291,8 +288,8 @@ func (t *ThreadRepo) GetThreadForumAndID(slugOrID string) (*entity.Thread, error
 	return thread, nil
 }
 
-var GetThreadsByForumSlugQuery = `SELECT author, created, forum, id, msg, slug, title, votes FROM threads WHERE forum = $1`
 func (t *ThreadRepo) GetThreadsByForumSlug(slug string, limit int32, since string, desc bool) ([]entity.Thread, error) {
+	var GetThreadsByForumSlugQuery = `SELECT author, created, forum, id, msg, slug, title, votes FROM threads WHERE forum = $1`
 	order := "ASC"
 	var compare string
 	if desc == false {
@@ -307,8 +304,14 @@ func (t *ThreadRepo) GetThreadsByForumSlug(slug string, limit int32, since strin
 	}
 
 	GetThreadsByForumSlugQuery += fmt.Sprintf(" ORDER BY created %v  LIMIT %v", order, limit)
+	var rows pgx.Rows
+	var err error
+	if since != "" {
+		rows, err = t.db.Query(context.Background(), GetThreadsByForumSlugQuery, slug, since)
+	} else {
+		rows, err = t.db.Query(context.Background(), GetThreadsByForumSlugQuery, slug)
+	}
 
-	rows, err := t.db.Query(context.Background(), GetThreadsByForumSlugQuery, slug, since)
 	if err != nil {
 		return nil, err
 	}

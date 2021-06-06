@@ -38,44 +38,42 @@ func (f *ForumRepo) GetForumDetails(slug string) (*entity.Forum, error) {
 	return forum, nil
 }
 
-func (f *ForumRepo) GetForumUsers(slug string, limit int32, since string, order string) ([]entity.User, error) {
-	var compare string
-	if order == "DESC" {
-		compare = "<"
-	} else {
-		compare = ">"
-	}
-
-	var query string
+func (f *ForumRepo) GetForumUsers(slug string, limit int32, since string, order string, compare string) ([]entity.User, error) {
+	GetForumUsersQ :=
 	if since != "" {
+		fmt.Println("-----=========================>", since)
 		if limit != 0 {
-			query = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
+			fmt.Println("--------------1---------------")
+			GetForumUsersQ = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
 				JOIN forum_user AS fu ON u.nickname = fu.nickname
 				WHERE fu.forum_slug = '%s' AND fu.nickname %v '%s'
 				ORDER BY u.nickname %v
 				LIMIT %v`, slug, compare, since, order, limit)
 		} else {
-			query = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
+			fmt.Println("--------------2---------------")
+			GetForumUsersQ = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
 				JOIN forum_user AS fu ON u.nickname = fu.nickname
 				WHERE fu.forum_slug = '%s' AND fu.nickname %v '%s'
 				ORDER BY u.nickname %v`, slug, compare, since, order)
 		}
 	} else {
 		if limit != 0 {
-			query = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
+			fmt.Println("--------------3---------------")
+			GetForumUsersQ = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
 				JOIN forum_user AS fu ON u.nickname = fu.nickname
 				WHERE fu.forum_slug = '%s'
 				ORDER BY u.nickname %v
 				LIMIT %v`, slug, order, limit)
 		} else {
-			query = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
+			fmt.Println("--------------4---------------")
+			GetForumUsersQ = fmt.Sprintf(`SELECT u.about, u.email, u.fullname, u.nickname FROM users AS u
 				JOIN forum_user AS fu ON u.nickname = fu.nickname
-				WHERE fu.forum_slug = '%s'
+				WHERE fu.forum_slug = '%s' 
 				ORDER BY u.nickname %v`, slug, order)
 		}
 	}
 
-	rows, err := f.db.Query(context.Background(), query)
+	rows, err := f.db.Query(context.Background(), GetForumUsersQ)
 	if err != nil {
 		return nil, err
 	}
@@ -90,17 +88,20 @@ func (f *ForumRepo) GetForumUsers(slug string, limit int32, since string, order 
 		}
 		users = append(users, user)
 	}
+	for _, us := range users {
+		fmt.Println("Nickname: ", us.Nickname)
+	}
 
 	return users, nil
 }
 
 const CheckForumQuery = `SELECT slug FROM forums WHERE slug = $1`
-func (f *ForumRepo) CheckForum(slug string) error {
+func (f *ForumRepo) CheckForum(slug string) (string, error) {
 	err := f.db.QueryRow(context.Background(), CheckForumQuery, slug).Scan(&slug)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return slug, nil
 }

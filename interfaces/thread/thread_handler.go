@@ -154,7 +154,7 @@ func (threadInfo *ThreadInfo) HandleGetThreadDetails(w http.ResponseWriter, r *h
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
+		w.WriteHeader(http.StatusNotFound)
 		w.Write(body)
 		return
 	}
@@ -191,7 +191,7 @@ func (threadInfo *ThreadInfo) HandleUpdateThread(w http.ResponseWriter, r *http.
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
+		w.WriteHeader(http.StatusNotFound)
 		w.Write(body)
 		return
 	}
@@ -267,7 +267,7 @@ func (threadInfo *ThreadInfo) HandleGetThreadPosts(w http.ResponseWriter, r *htt
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
+		w.WriteHeader(http.StatusNotFound)
 		w.Write(body)
 		return
 	}
@@ -283,16 +283,32 @@ func (threadInfo *ThreadInfo) HandleGetThreadPosts(w http.ResponseWriter, r *htt
 	}
 
 	sortParam, _ := queryParams[string(entity.SortKey)]
-	descParam, _ := queryParams[string(entity.DescKey)]
+	sort := ""
+	if sortParam == nil {
+		sort = ""
+	} else {
+		sort = sortParam[0]
+	}
 
-	desc := true
-	if descParam[0] == "" {
+	descParam, _ := queryParams[string(entity.DescKey)]
+	desc := false
+	if descParam == nil {
 		desc = false
+	} else {
+		if descParam[0] == "true" {
+			desc = true
+		}
 	}
 
 	sinceParam, _ := queryParams[string(entity.SinceKey)]
+	since := ""
+	if sinceParam == nil {
+		since = ""
+	} else {
+		since = sinceParam[0]
+	}
 
-	posts, err := threadInfo.ThreadApp.GetThreadPosts(slugOrID, int32(limit), sinceParam[0], sortParam[0], desc)
+	posts, err := threadInfo.ThreadApp.GetThreadPosts(slugOrID, int32(limit), since, sort, desc)
 	if err != nil {
 		threadInfo.logger.Info(
 			err.Error(), zap.String("url", r.RequestURI),
@@ -359,7 +375,7 @@ func (threadInfo *ThreadInfo) HandleVoteForThread(w http.ResponseWriter, r *http
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
+		w.WriteHeader(http.StatusNotFound)
 		w.Write(body)
 		return
 	}

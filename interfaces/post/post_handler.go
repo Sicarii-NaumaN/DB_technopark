@@ -71,8 +71,12 @@ func (postInfo *PostInfo) HandleGetPostDetails(w http.ResponseWriter, r *http.Re
 
 	queryParams := r.URL.Query()
 
-	related, _ := queryParams[string(entity.RelatedKey)]
-	if strings.Contains(related[0], "user") {
+	relatedParam, _ := queryParams[string(entity.RelatedKey)]
+	related := ""
+	if relatedParam != nil {
+		related = relatedParam[0]
+	}
+	if strings.Contains(related, "user") {
 		author, err := postInfo.UserApp.GetUserByNickname(post.Author)
 		if err != nil {
 			msg := entity.Message{
@@ -92,7 +96,7 @@ func (postInfo *PostInfo) HandleGetPostDetails(w http.ResponseWriter, r *http.Re
 		postInformation.Author = author
 	}
 
-	if strings.Contains(related[0], "thread") {
+	if strings.Contains(related, "thread") {
 		thread, err := postInfo.ThreadApp.GetThread(strconv.Itoa(post.Thread))
 		if err != nil {
 			msg := entity.Message{
@@ -112,7 +116,7 @@ func (postInfo *PostInfo) HandleGetPostDetails(w http.ResponseWriter, r *http.Re
 		postInformation.Thread = thread
 	}
 
-	if strings.Contains(related[0], "forum") {
+	if strings.Contains(related, "forum") {
 		forum, err := postInfo.ForumApp.GetForumDetails(post.Forum)
 		if err != nil {
 			msg := entity.Message{

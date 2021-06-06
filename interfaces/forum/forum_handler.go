@@ -120,7 +120,7 @@ func (forumInfo *ForumInfo) HandleGetForumDetails(w http.ResponseWriter, r *http
 	forum, err := forumInfo.ForumApp.GetForumDetails(slug)
 	if err != nil {
 		msg := entity.Message {
-			Text: fmt.Sprintf("Can't find user with id #%v\n", forum.User),
+			Text: fmt.Sprintf("Can't find user with id #%v\n", slug),
 		}
 		body, err := json.Marshal(msg)
 		if err != nil {
@@ -243,7 +243,7 @@ func (forumInfo *ForumInfo) HandleGetForumUsers(w http.ResponseWriter, r *http.R
 	vars := mux.Vars(r)
 	slug := vars[string(entity.SlugKey)]
 
-	err := forumInfo.ForumApp.CheckForum(slug)
+	_, err := forumInfo.ForumApp.CheckForumCase(slug)
 	if err != nil {
 		msg := entity.Message {
 			Text: fmt.Sprintf("Can't find forum by slug: %v", slug),
@@ -262,24 +262,35 @@ func (forumInfo *ForumInfo) HandleGetForumUsers(w http.ResponseWriter, r *http.R
 	queryParams := r.URL.Query()
 
 	limitParam, _ := queryParams[string(entity.LimitKey)]
-	limit, err := strconv.Atoi(limitParam[0])
-	if err != nil {
-		forumInfo.logger.Info(err.Error(), zap.String("url", r.RequestURI), zap.String("method", r.Method))
-		w.WriteHeader(http.StatusBadRequest)
-		return
+	limit := 0
+	if limitParam != nil {
+		limit, err = strconv.Atoi(limitParam[0])
+		if err != nil {
+			forumInfo.logger.Info(err.Error(), zap.String("url", r.RequestURI), zap.String("method", r.Method))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 	}
 
-
 	descParam, _ := queryParams[string(entity.DescKey)]
-
-	desc := true
-	if descParam[0] == "" {
+	desc := false
+	if descParam == nil {
 		desc = false
+	} else {
+		if descParam[0] == "true" {
+			desc = true
+		}
 	}
 
 	sinceParam, _ := queryParams[string(entity.SinceKey)]
+	since := ""
+	if sinceParam == nil {
+		since = ""
+	} else {
+		since = sinceParam[0]
+	}
 
-	users, err := forumInfo.ForumApp.GetForumUsers(slug, int32(limit), sinceParam[0], desc)
+	users, err := forumInfo.ForumApp.GetForumUsers(slug, int32(limit), since, desc)
 	if err != nil {
 		forumInfo.logger.Info(
 			err.Error(), zap.String("url", r.RequestURI),
@@ -303,11 +314,11 @@ func (forumInfo *ForumInfo) HandleGetForumUsers(w http.ResponseWriter, r *http.R
 }
 
 func (forumInfo *ForumInfo) HandleGetForumThreads(w http.ResponseWriter, r *http.Request) {
-	forumInfo.logger.Info("starting ForumBranches")
+	forumInfo.logger.Info("HandleGetForumThreads")
 	vars := mux.Vars(r)
 	slug := vars[string(entity.SlugKey)]
 
-	err := forumInfo.ForumApp.CheckForum(slug)
+	_, err := forumInfo.ForumApp.CheckForumCase(slug)
 	if err != nil {
 		msg := entity.Message {
 			Text: fmt.Sprintf("Can't find forum by slug: %v", slug),
@@ -334,17 +345,23 @@ func (forumInfo *ForumInfo) HandleGetForumThreads(w http.ResponseWriter, r *http
 		return
 	}
 
-
 	descParam, _ := queryParams[string(entity.DescKey)]
-
-	desc := true
-	if descParam[0] == "" {
+	desc := false
+	if descParam == nil {
 		desc = false
+	} else {
+		if descParam[0] == "true" {
+			desc = true
+		}
 	}
 
 	sinceParam, _ := queryParams[string(entity.SinceKey)]
+	since := ""
+	if sinceParam != nil {
+		since = sinceParam[0]
+	}
 
-	threads, err := forumInfo.ThreadApp.GetThreadsByForumSlug(slug, int32(limit), sinceParam[0], desc)
+	threads, err := forumInfo.ThreadApp.GetThreadsByForumSlug(slug, int32(limit), since, desc)
 	if err != nil {
 		forumInfo.logger.Info(
 			err.Error(), zap.String("url", r.RequestURI),
