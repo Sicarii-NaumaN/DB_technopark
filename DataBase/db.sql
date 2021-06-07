@@ -80,7 +80,7 @@ CREATE UNLOGGED TABLE posts (
     thread INTEGER NOT NULL
 );
 
--- CREATE INDEX index_posts_id on posts (id);
+CREATE INDEX index_posts_id on posts USING HASH (id);
 CREATE INDEX index_posts_thread_id on posts (thread, id);
 CREATE INDEX index_posts_thread_parent_path on posts (thread, parent, path);
 CREATE INDEX index_posts_path1_path on posts ((path[1]), path);
