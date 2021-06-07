@@ -16,11 +16,9 @@ CREATE UNLOGGED TABLE IF NOT EXISTS users (
 
 CREATE INDEX index_users_nickname_hash ON users USING HASH (nickname);
 CREATE INDEX index_users_email_hash ON users USING HASH (email);
--- CREATE INDEX index_users_nickname_hash ON users USING HASH (nickname);
--- CREATE INDEX index_users_email_hash ON users USING HASH (email);
--- CREATE  INDEX idx_users_id ON users(id);
--- -- CREATE UNIQUE INDEX idx_users_nickname ON users(nickname);
--- -- CLUSTER users USING idx_users_nickname;
+CREATE  INDEX idx_users_id ON users(id);
+-- CREATE UNIQUE INDEX idx_users_nickname ON users(nickname);
+-- CLUSTER users USING idx_users_nickname;
 
 
 CREATE UNLOGGED TABLE IF NOT EXISTS forums (
