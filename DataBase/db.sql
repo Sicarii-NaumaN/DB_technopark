@@ -16,7 +16,7 @@ CREATE UNLOGGED TABLE IF NOT EXISTS users (
 
 CREATE INDEX index_users_nickname_hash ON users USING HASH (nickname);
 CREATE INDEX index_users_email_hash ON users USING HASH (email);
-CREATE  INDEX idx_users_id ON users(id);
+CREATE  INDEX idx_users_id ON users USING HASH  (id);
 -- CREATE UNIQUE INDEX idx_users_nickname ON users(nickname);
 -- CLUSTER users USING idx_users_nickname;
 
@@ -33,7 +33,7 @@ CREATE UNLOGGED TABLE IF NOT EXISTS forums (
 
 CREATE INDEX index_forums ON forums (slug, title, user_nickname, post_count, thread_count);
 CREATE INDEX index_forums_slug_hash ON forums USING HASH (slug);
-CREATE INDEX index_forums_users_foreign ON forums (user_nickname);
+CREATE INDEX index_forums_users_foreign ON forums USING HASH (user_nickname);
 
 
 CREATE UNLOGGED TABLE IF NOT EXISTS threads (
@@ -80,7 +80,7 @@ CREATE UNLOGGED TABLE posts (
     thread INTEGER NOT NULL
 );
 
-CREATE INDEX index_posts_id on posts (id);
+-- CREATE INDEX index_posts_id on posts (id);
 CREATE INDEX index_posts_thread_id on posts (thread, id);
 CREATE INDEX index_posts_thread_parent_path on posts (thread, parent, path);
 CREATE INDEX index_posts_path1_path on posts ((path[1]), path);
