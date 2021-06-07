@@ -28,7 +28,6 @@ CREATE UNLOGGED TABLE IF NOT EXISTS forums (
     user_nickname  CITEXT      NOT NULL
 );
 
-
 CREATE INDEX index_forums ON forums (slug, title, user_nickname, post_count, thread_count);
 CREATE INDEX index_forums_slug_hash ON forums USING HASH (slug);
 CREATE INDEX index_forums_users_foreign ON forums USING HASH (user_nickname);
@@ -90,7 +89,8 @@ CREATE UNLOGGED TABLE Forum_user (
     FOREIGN KEY (nickname) REFERENCES Users (nickname)
 );
 
-CREATE UNIQUE INDEX idx_forum_users_slug ON forum_user(forum_slug, nickname );
+CREATE UNIQUE INDEX idx_forum_users_slug ON forum_user(forum_slug, nickname);
+CREATE INDEX index_forum_user_nickname ON forum_user USING HASH (nickname);
 CLUSTER forum_user USING idx_forum_users_slug;
 
 CREATE OR REPLACE FUNCTION add_forum_user()
@@ -150,6 +150,8 @@ CREATE UNLOGGED TABLE IF NOT EXISTS Thread_vote (
     vote     INT                                 NOT NULL
 );
 
+CREATE UNIQUE INDEX index_votes ON thread_vote (thread_id, nickname);
+
 ALTER TABLE ONLY Thread_vote ADD CONSTRAINT votes_user_thread_unique UNIQUE (nickname, thread_id);
 CLUSTER Thread_vote USING votes_user_thread_unique;
 
@@ -188,29 +190,6 @@ $vote_update$ LANGUAGE  plpgsql;
 
 DROP TRIGGER IF EXISTS vote_update ON Thread_vote;
 CREATE TRIGGER vote_update AFTER UPDATE ON Thread_vote FOR EACH ROW EXECUTE PROCEDURE vote_update();
-
-
-
--- CREATE OR REPLACE FUNCTION path() RETURNS TRIGGER AS $path$
--- DECLARE
---     parent_path INT[];
---     parent_thread_id INT;
--- BEGIN
---     IF (NEW.parent is null ) THEN
---         NEW.path := NEW.path || NEW.id;
---     ELSE
---         SELECT path, thread FROM posts
---         WHERE id = NEW.parent  INTO parent_path, parent_thread_id;
---         IF parent_thread_id != NEW.thread THEN
---             raise exception 'error228' using errcode = '00409';
---         end if;
---         NEW.path := NEW.path || parent_path || NEW.id;
---     END IF;
---
---     RETURN NEW;
--- END;
---
--- $path$ LANGUAGE  plpgsql;
 
 CREATE OR REPLACE FUNCTION set_post_path()
     RETURNS TRIGGER AS
